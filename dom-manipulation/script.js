@@ -158,8 +158,8 @@ async function syncQuotes() {
 setInterval(syncQuotes, 60000);
 
 // Event listeners
-document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
+document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
 document.getElementById("exportBtn").addEventListener("click", exportToJson);
 document.getElementById("importFile").addEventListener("change", importFromJsonFile);
