@@ -56,6 +56,7 @@ function addQuote() {
   alert("Quote added successfully!");
 }
 
+
 // Populate category dropdown
 function populateCategories() {
   const categories = [...new Set(quotes.map(q => q.category))];
@@ -136,6 +137,7 @@ setInterval(syncWithServer, 60000);
 
 // Initialize app
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+
 loadQuotes();
 populateCategories();
 showRandomQuote();
