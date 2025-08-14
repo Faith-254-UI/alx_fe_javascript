@@ -51,15 +51,15 @@ function addQuote() {
   quotes.push({ text, category });
   saveQuotes();
   populateCategories();
+  showRandomQuote();
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
   alert("Quote added successfully!");
 }
 
-
 // Populate category dropdown
 function populateCategories() {
-  const categories = [...new Set(quotes.map(q => q.category))];
+  const categories = [...new Set(quotes.map(q => q.category))].sort();
   categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
   categories.forEach(cat => {
     const option = document.createElement("option");
@@ -97,13 +97,17 @@ function importFromJsonFile(event) {
   fileReader.onload = function(e) {
     try {
       const importedQuotes = JSON.parse(e.target.result);
-      if (Array.isArray(importedQuotes)) {
+      const isValid = Array.isArray(importedQuotes) &&
+        importedQuotes.every(q => q.text && q.category);
+
+      if (isValid) {
         quotes.push(...importedQuotes);
         saveQuotes();
         populateCategories();
+        showRandomQuote();
         alert("Quotes imported successfully!");
       } else {
-        alert("Invalid JSON format.");
+        alert("Invalid quote format in JSON.");
       }
     } catch {
       alert("Error parsing JSON file.");
@@ -122,10 +126,10 @@ async function syncWithServer() {
       category: "Server"
     }));
 
-    // Conflict resolution: server data takes precedence
     quotes = [...quotes.filter(q => q.category !== "Server"), ...newQuotes];
     saveQuotes();
     populateCategories();
+    showRandomQuote();
     alert("Quotes synced with server!");
   } catch (error) {
     console.error("Sync failed:", error);
@@ -135,9 +139,22 @@ async function syncWithServer() {
 // Periodic sync every 60 seconds
 setInterval(syncWithServer, 60000);
 
-// Initialize app
+// Event listeners
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
+document.getElementById("addQuoteBtn").addEventListener("click", addQuote);
+document.getElementById("categoryFilter").addEventListener("change", filterQuotes);
+document.getElementById("exportBtn").addEventListener("click", exportToJson);
+document.getElementById("importFile").addEventListener("change", importFromJsonFile);
 
+// Initialize app
 loadQuotes();
 populateCategories();
-showRandomQuote();
+
+// Show last viewed quote if available
+const lastQuote = sessionStorage.getItem("lastViewedQuote");
+if (lastQuote) {
+  const quote = JSON.parse(lastQuote);
+  quoteDisplay.textContent = `"${quote.text}" — ${quote.category}`;
+} else {
+  showRandomQuote();
+}
