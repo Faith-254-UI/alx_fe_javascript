@@ -39,7 +39,7 @@ function showRandomQuote() {
 }
 
 // Add a new quote
-function addQuote() {
+async function addQuote() {
   const text = document.getElementById("newQuoteText").value.trim();
   const category = document.getElementById("newQuoteCategory").value.trim();
 
@@ -48,13 +48,17 @@ function addQuote() {
     return;
   }
 
-  quotes.push({ text, category });
+  const newQuote = { text, category };
+  quotes.push(newQuote);
   saveQuotes();
   populateCategories();
   showRandomQuote();
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
   alert("Quote added successfully!");
+
+  // Optional: Post to server
+  await postQuoteToServer(newQuote);
 }
 
 // Populate category dropdown
@@ -116,17 +120,31 @@ function importFromJsonFile(event) {
   fileReader.readAsText(event.target.files[0]);
 }
 
-// Simulate server sync
-async function syncWithServer() {
-  try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
-    const serverQuotes = await response.json();
-    const newQuotes = serverQuotes.slice(0, 5).map(post => ({
-      text: post.title,
-      category: "Server"
-    }));
+// Fetch quotes from server
+async function fetchQuotesFromServer() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+  const data = await response.json();
+  return data.slice(0, 5).map(post => ({
+    text: post.title,
+    category: "Server"
+  }));
+}
 
-    quotes = [...quotes.filter(q => q.category !== "Server"), ...newQuotes];
+// Post quote to server (mock)
+async function postQuoteToServer(quote) {
+  await fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    body: JSON.stringify(quote),
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+// Sync quotes with server
+async function syncQuotes() {
+  try {
+    const serverQuotes = await fetchQuotesFromServer();
+    const localWithoutServer = quotes.filter(q => q.category !== "Server");
+    quotes = [...localWithoutServer, ...serverQuotes];
     saveQuotes();
     populateCategories();
     showRandomQuote();
@@ -137,7 +155,7 @@ async function syncWithServer() {
 }
 
 // Periodic sync every 60 seconds
-setInterval(syncWithServer, 60000);
+setInterval(syncQuotes, 60000);
 
 // Event listeners
 document.getElementById("newQuote").addEventListener("click", showRandomQuote);
